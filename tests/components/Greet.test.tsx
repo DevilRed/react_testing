@@ -1,10 +1,7 @@
-import { render, screen } from '@testing-library/react';
-import { it, expect, describe } from 'vitest';
+import { render, screen } from '@testing-library/react'
 import Greet from '../../src/components/Greet';
 
-// add more matchers
-// github.com/testing-library/jest-dom
-import '@testing-library/jest-dom/vitest';
+
 
 describe('Greet component', () => {
 	it('should show message with given name', () => {
