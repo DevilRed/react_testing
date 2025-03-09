@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [
+  /* plugins: [// compile errror
     require('@tailwindcss/typography'),
-  ],
+  ], */
 };
