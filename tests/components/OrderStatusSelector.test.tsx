@@ -4,27 +4,26 @@ import { Theme } from '@radix-ui/themes';
 import userEvent from '@testing-library/user-event';
 
 describe('OrderStatusSelector', () => {
-	it('should render new as default value', () => {
-		render(
-			<Theme>
+	const renderComponent = () => {
+		render(<Theme>
 				<OrderStatusSelector onChange={vi.fn()}/>
-			</Theme>
-		)
-		const button = screen.getByRole('combobox')
+			</Theme>)
+		return {
+			button: screen.getByRole('combobox'),
+			getOptions: () => screen.findAllByRole('option')
+		}
+	}
+	it('should render new as default value', () => {
+		const { button } = renderComponent()
 		expect(button).toHaveTextContent(/new/i)
 	});
 
 	it('should render correct statuses', async () => {
 		const user = userEvent.setup()
-		render(
-			<Theme>
-				<OrderStatusSelector onChange={vi.fn()}/>
-			</Theme>
-		)
-		const button = screen.getByRole('combobox')
+		const { button, getOptions } = renderComponent()
 		await user.click(button)
 
-		const options = await screen.findAllByRole('option')
+		const options = await getOptions()
 		expect(options).toHaveLength(3)
 
 		// test options have right labels
