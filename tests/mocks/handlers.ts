@@ -1,16 +1,7 @@
-import { http, HttpResponse } from "msw";
-import { products } from "./data";
+import { db } from "./db";
 
 export const handlers = [
-	http.get('/categories', () => {
-		return HttpResponse.json([
-			{ id: 1, name: 'Electronics'},
-			{ id: 2, name: 'Beuaty'},
-			{ id: 3, name: 'Gardening'},
-		])
-	}),
-
-	http.get('/products', () => {
+	/* http.get('/products', () => {
 		return HttpResponse.json(products)
 	}),
 
@@ -20,5 +11,9 @@ export const handlers = [
 		const product = products.find(p => p.id === id)
 		if (!product) return new HttpResponse(null, { status: 404})
 		return HttpResponse.json(product)
-	})
+	}) */
+	// remove hardcoded data because as the app evolves endpoints can grow if would be unmanageable
+
+	// this return an array of request handlers for all http methods (get, post, put, delete)
+	...db.product.toHandlers('rest')
 ];
