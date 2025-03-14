@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { http, HttpResponse } from "msw";
+import { render, screen, waitForElementToBeRemoved } from '@testing-library/react';
+import { http, HttpResponse, DefaultBodyType } from "msw";
 import ProductDetail from '../../src/components/ProductDetail';
 import { db } from '../mocks/db';
 import { server } from '../mocks/server';
@@ -43,5 +43,29 @@ describe('ProductDetail', () => {
 		render(<ProductDetail productId={1} />)
 		const message = await screen.findByText(/error/i)
 		expect(message).toBeInTheDocument()
+	});
+
+	it('should render a loading indicator when fetching data', async () => {
+		server.use(http.get( '/products', async () => {
+			await delay()
+			// no product is needed because we are testing the loading
+			return HttpResponse.json([])
+		} ))
+		render(<ProductDetail productId={1} />)
+
+		expect(await screen.findByText(/loading/i)).toBeInTheDocument()
+	});
+
+	it('should remove loading indicator after data is fetched', async () => {
+		render(<ProductDetail productId={1} />)
+		// kind of expect since it fails if element is not removed
+		await waitForElementToBeRemoved(() => screen.queryByText(/loading/i))
+	});
+
+	it('should remove loading indicator if data fetching fails', async () => {
+		server.use(http.get( '/products', () => HttpResponse.error() ))
+		render(<ProductDetail productId={1} />)
+		// kind of expect since it fails if element is not removed
+		await waitForElementToBeRemoved(() => screen.queryByText(/loading/i))
 	});
 })
