@@ -1,5 +1,5 @@
 import { render, screen, waitForElementToBeRemoved } from '@testing-library/react';
-import { http, HttpResponse, DefaultBodyType } from "msw";
+import { http, HttpResponse, delay } from "msw";
 import ProductDetail from '../../src/components/ProductDetail';
 import { db } from '../mocks/db';
 import { server } from '../mocks/server';
