@@ -3,28 +3,37 @@ import BrowseProducts from '../../src/pages/BrowseProductsPage';
 import { http, delay, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
 import { Theme } from '@radix-ui/themes';
-import { Category } from "../../src/entities";
+import { Category, Product } from "../../src/entities";
 import { db } from "../mocks/db";
+import userEvent from "@testing-library/user-event";
+import { CartProvider } from "../../src/providers/CartProvider";
 
 const renderComponent = () => {
   render(
-    <Theme>
-      <BrowseProducts />
-    </Theme>
+    <CartProvider>
+      <Theme>
+        <BrowseProducts />
+      </Theme>
+    </CartProvider>
   );
 };
 
 describe("BrowseProductsPage", () => {
   const categories: Category[] = [];
+  const products: Product[] = [];
   beforeAll(() => {
-    [1, 2].forEach(() => {
-      categories.push(db.category.create());
+    [1, 2].forEach((item) => {
+      categories.push(db.category.create({ name: "Category " + item }));
+      products.push(db.product.create());
     });
   });
 
   afterAll(() => {
     const categoryIds = categories.map((cat) => cat.id);
     db.category.deleteMany({ where: { id: { in: categoryIds } } });
+
+    const productIds = products.map((p) => p.id);
+    db.product.deleteMany({ where: { id: { in: productIds } } });
   });
 
   it("should render a loading skeleton when fetching categories", () => {
@@ -88,9 +97,31 @@ describe("BrowseProductsPage", () => {
   });
 
   it("should render categories", async () => {
+    const user = userEvent.setup();
     renderComponent();
 
     const combobox = await screen.findByRole("combobox");
     expect(combobox).toBeInTheDocument();
+
+    await user.click(combobox);
+
+    expect(screen.getByRole("option", { name: /all/i })).toBeInTheDocument();
+    categories.forEach((category) => {
+      expect(
+        screen.getByRole("option", { name: category.name })
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("should render products", async () => {
+    renderComponent();
+
+    await waitForElementToBeRemoved(() =>
+      screen.queryByRole("progressbar", { name: /products/i })
+    );
+
+    products.forEach((product) => {
+      expect(screen.getByText(product.name)).toBeInTheDocument();
+    });
   });
 });
