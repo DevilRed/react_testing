@@ -15,5 +15,6 @@ export const handlers = [
 	// remove hardcoded data because as the app evolves endpoints can grow if would be unmanageable
 
 	// this return an array of request handlers for all http methods (get, post, put, delete)
-	...db.product.toHandlers('rest')
+	...db.product.toHandlers('rest'),
+	...db.category.toHandlers('rest')
 ];

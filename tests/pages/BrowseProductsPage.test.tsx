@@ -4,6 +4,7 @@ import { http, delay, HttpResponse } from 'msw';
 import { server } from '../mocks/server';
 import { Theme } from '@radix-ui/themes';
 import { Category } from "../../src/entities";
+import { db } from "../mocks/db";
 
 const renderComponent = () => {
   render(
@@ -15,9 +16,16 @@ const renderComponent = () => {
 
 describe("BrowseProductsPage", () => {
   const categories: Category[] = [];
-  /* beforeAll(() => {
-		db.
-	}) */
+  beforeAll(() => {
+    [1, 2].forEach(() => {
+      categories.push(db.category.create());
+    });
+  });
+
+  afterAll(() => {
+    const categoryIds = categories.map((cat) => cat.id);
+    db.category.deleteMany({ where: { id: { in: categoryIds } } });
+  });
 
   it("should render a loading skeleton when fetching categories", () => {
     // overwrite request to create a delay
@@ -77,5 +85,12 @@ describe("BrowseProductsPage", () => {
     server.use(http.get("/products", () => HttpResponse.error()));
     renderComponent();
     expect(await screen.findByText(/error/i)).toBeInTheDocument();
+  });
+
+  it("should render categories", async () => {
+    renderComponent();
+
+    const combobox = await screen.findByRole("combobox");
+    expect(combobox).toBeInTheDocument();
   });
 });
