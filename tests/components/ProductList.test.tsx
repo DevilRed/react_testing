@@ -1,25 +1,10 @@
-import { render, screen, waitForElementToBeRemoved } from '@testing-library/react'
+import { render, screen, waitForElementToBeRemoved } from '@testing-library/react';
+import { delay, http, HttpResponse } from "msw";
 import ProductList from '../../src/components/ProductList';
-import { server } from '../mocks/server';
-import { http, HttpResponse, delay } from "msw";
+import AllProviders from '../AllProviders';
 import { db } from '../mocks/db';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { server } from '../mocks/server';
 
-const renderComponent = () => {
-	const client = new QueryClient({
-		defaultOptions: {
-			queries: {
-				retry: false
-			}
-		}
-	})
-
-	render(
-		<QueryClientProvider client={client}>
-			<ProductList />
-		</QueryClientProvider>
-	)
-}
 
 describe('ProductList', () => {
 	const productIds: number[] = []
@@ -35,7 +20,7 @@ describe('ProductList', () => {
 		db.product.deleteMany({ where: {id: {in: productIds}}})
 	})
 	it('should render the list of products', async () => {
-		renderComponent()
+		render(<ProductList />, { wrapper: AllProviders})
 
 		const items = await screen.findAllByRole('listitem')
 		expect(items.length).toBeGreaterThan(0)
@@ -44,7 +29,7 @@ describe('ProductList', () => {
 	it('should render no products available if no products is found', async() => {
 		// overwrite products endpoint response to return an empty array
 		server.use(http.get( '/products', () => HttpResponse.json([]) ))
-		renderComponent()
+		render(<ProductList />, { wrapper: AllProviders})
 
 		const message = await screen.findByText(/no products/i)
 		expect(message).toBeInTheDocument()
@@ -52,7 +37,7 @@ describe('ProductList', () => {
 
 	it('should render an error message when there is an error', async () => {
 		server.use(http.get( '/products', () => HttpResponse.error() ))
-		renderComponent()
+		render(<ProductList />, { wrapper: AllProviders})
 
 		expect(await screen.findByText(/error/i)).toBeInTheDocument()
 	});
@@ -63,20 +48,20 @@ describe('ProductList', () => {
 			// no product is needed because we are testing the loading
 			return HttpResponse.json([])
 		} ))
-		renderComponent()
+		render(<ProductList />, { wrapper: AllProviders})
 
 		expect(await screen.findByText(/loading/i)).toBeInTheDocument()
 	});
 
 	it('should remove loading indicator after data is fetched', async () => {
-		renderComponent()
+		render(<ProductList />, { wrapper: AllProviders})
 		// kind of expect since it fails if element is not removed
 		await waitForElementToBeRemoved(() => screen.queryByText(/loading/i))
 	});
 
 	it('should remove loading indicator if data fetching fails', async () => {
 		server.use(http.get( '/products', () => HttpResponse.error() ))
-		renderComponent()
+		render(<ProductList />, { wrapper: AllProviders})
 		// kind of expect since it fails if element is not removed
 		await waitForElementToBeRemoved(() => screen.queryByText(/loading/i))
 	});
