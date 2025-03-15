@@ -1,12 +1,14 @@
-import { render, screen, waitForElementToBeRemoved } from '@testing-library/react'
-import BrowseProducts from '../../src/pages/BrowseProductsPage';
-import { http, HttpResponse } from "msw";
-import { server } from "../mocks/server";
 import { Theme } from "@radix-ui/themes";
-import { Category, Product } from "../../src/entities";
-import { db } from "../mocks/db";
+import {
+  render,
+  screen,
+  waitForElementToBeRemoved,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Category, Product } from "../../src/entities";
+import BrowseProducts from "../../src/pages/BrowseProductsPage";
 import { CartProvider } from "../../src/providers/CartProvider";
+import { db } from "../mocks/db";
 import { simulateDelay, simulateError } from "../utilities";
 
 const renderComponent = () => {
@@ -24,6 +26,7 @@ const renderComponent = () => {
       }),
     getCategoriesSkeleton: () =>
       screen.queryByRole("progressbar", { name: /categories/i }),
+    getCategoriesCombobox: () => screen.queryByRole("combobox"),
   };
 };
 
@@ -75,12 +78,10 @@ describe("BrowseProductsPage", () => {
 
   it("should not render an error if categories cannot be fetched", async () => {
     simulateError("/categories");
-    const { getCategoriesSkeleton } = renderComponent();
+    const { getCategoriesSkeleton, getCategoriesCombobox } = renderComponent();
     await waitForElementToBeRemoved(getCategoriesSkeleton);
     expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("combobox", { name: /category/i })
-    ).not.toBeInTheDocument();
+    expect(getCategoriesCombobox()).not.toBeInTheDocument();
   });
 
   it("should render an error if products cannot be fetched", async () => {
@@ -91,12 +92,13 @@ describe("BrowseProductsPage", () => {
 
   it("should render categories", async () => {
     const user = userEvent.setup();
-    renderComponent();
+    const { getCategoriesSkeleton, getCategoriesCombobox } = renderComponent();
+    await waitForElementToBeRemoved(getCategoriesSkeleton);
 
-    const combobox = await screen.findByRole("combobox");
+    const combobox = await getCategoriesCombobox();
     expect(combobox).toBeInTheDocument();
 
-    await user.click(combobox);
+    await user.click(combobox!);
 
     expect(screen.getByRole("option", { name: /all/i })).toBeInTheDocument();
     categories.forEach((category) => {
