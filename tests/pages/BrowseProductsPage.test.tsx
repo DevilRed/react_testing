@@ -16,6 +16,14 @@ const renderComponent = () => {
       </Theme>
     </CartProvider>
   );
+  return {
+    getProductsSkeleton: () =>
+      screen.queryByRole("progressbar", {
+        name: /products/i,
+      }),
+    getCategoriesSkeleton: () =>
+      screen.queryByRole("progressbar", { name: /categories/i }),
+  };
 };
 
 describe("BrowseProductsPage", () => {
@@ -51,10 +59,8 @@ describe("BrowseProductsPage", () => {
   });
 
   it("should hide the loading skeleton after categories are fetched", async () => {
-    renderComponent();
-    await waitForElementToBeRemoved(() =>
-      screen.queryByRole("progressbar", { name: /categories/i })
-    );
+    const { getCategoriesSkeleton } = renderComponent();
+    await waitForElementToBeRemoved(getCategoriesSkeleton);
   });
 
   it("should render a loading skeleton when fetching products", () => {
@@ -72,18 +78,14 @@ describe("BrowseProductsPage", () => {
   });
 
   it("should hide the loading skeleton after products are fetched", async () => {
-    renderComponent();
-    await waitForElementToBeRemoved(() =>
-      screen.queryByRole("progressbar", { name: /products/i })
-    );
+    const { getProductsSkeleton } = renderComponent();
+    await waitForElementToBeRemoved(getProductsSkeleton);
   });
 
   it("should not render an error if categories cannot be fetched", async () => {
     server.use(http.get("/categories", () => HttpResponse.error()));
-    renderComponent();
-    await waitForElementToBeRemoved(() =>
-      screen.getByRole("progressbar", { name: /categories/i })
-    );
+    const { getCategoriesSkeleton } = renderComponent();
+    await waitForElementToBeRemoved(getCategoriesSkeleton);
     expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
     expect(
       screen.queryByRole("combobox", { name: /category/i })
@@ -114,11 +116,9 @@ describe("BrowseProductsPage", () => {
   });
 
   it("should render products", async () => {
-    renderComponent();
+    const { getProductsSkeleton } = renderComponent();
 
-    await waitForElementToBeRemoved(() =>
-      screen.queryByRole("progressbar", { name: /products/i })
-    );
+    await waitForElementToBeRemoved(getProductsSkeleton);
 
     products.forEach((product) => {
       expect(screen.getByText(product.name)).toBeInTheDocument();
