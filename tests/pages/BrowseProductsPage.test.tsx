@@ -124,4 +124,38 @@ describe("BrowseProductsPage", () => {
       expect(screen.getByText(product.name)).toBeInTheDocument();
     });
   });
+
+  it("should filter products by category", async () => {
+    const user = userEvent.setup();
+    const { getCategoriesSkeleton, getCategoriesCombobox } = renderComponent();
+
+    // arrange
+    await waitForElementToBeRemoved(getCategoriesSkeleton);
+    const combobox = getCategoriesCombobox();
+    await user.click(combobox!);
+
+    // act
+    // select a category from combobox
+    const selectedCategory = categories[0];
+    const option = screen.getByRole("option", { name: selectedCategory.name });
+    await user.click(option);
+
+    // assert
+    // find products in selected category
+    const products = db.product.findMany({
+      where: {
+        categoryId: { equals: selectedCategory.id },
+      },
+    });
+    // assert number of rows equal number of product in selected category
+    const rows = screen.getAllByRole("row");
+    // remove heading row in table
+    const productRows = rows.slice(1);
+    expect(productRows).toHaveLength(products.length);
+
+    // check products are shown in page
+    products.forEach((product) => {
+      expect(screen.getByText(product.name)).toBeInTheDocument();
+    });
+  });
 });
