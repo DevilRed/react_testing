@@ -31,15 +31,22 @@ const renderComponent = () => {
 };
 
 describe("BrowseProductsPage", () => {
+  // mock preparation
   const categories: Category[] = [];
   const products: Product[] = [];
+
   beforeAll(() => {
     [1, 2].forEach((item) => {
-      categories.push(db.category.create({ name: "Category " + item }));
-      products.push(db.product.create());
+      const category = db.category.create({ name: "Category " + item });
+      categories.push(category);
+      // create 2 product for each category
+      [1, 2].forEach(() => {
+        products.push(db.product.create({ categoryId: category.id }));
+      });
     });
   });
 
+  // mock clean up
   afterAll(() => {
     const categoryIds = categories.map((cat) => cat.id);
     db.category.deleteMany({ where: { id: { in: categoryIds } } });
