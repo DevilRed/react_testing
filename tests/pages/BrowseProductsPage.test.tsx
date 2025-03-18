@@ -1,4 +1,3 @@
-import { Theme } from "@radix-ui/themes";
 import {
   render,
   screen,
@@ -7,9 +6,9 @@ import {
 import userEvent from "@testing-library/user-event";
 import { Category, Product } from "../../src/entities";
 import BrowseProducts from "../../src/pages/BrowseProductsPage";
-import { CartProvider } from "../../src/providers/CartProvider";
 import { db, getProductsByCategory } from "../mocks/db";
 import { simulateDelay, simulateError } from "../utilities";
+import AllProviders from "../AllProviders";
 
 describe("BrowseProductsPage", () => {
   // mock preparation
@@ -130,13 +129,7 @@ describe("BrowseProductsPage", () => {
 });
 
 const renderComponent = () => {
-  render(
-    <CartProvider>
-      <Theme>
-        <BrowseProducts />
-      </Theme>
-    </CartProvider>
-  );
+  render(<BrowseProducts />, { wrapper: AllProviders });
 
   const getProductsSkeleton = () =>
     screen.queryByRole("progressbar", {
