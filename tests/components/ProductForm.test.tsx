@@ -4,41 +4,47 @@ import { Category, Product } from "../../src/entities";
 import AllProviders from "../AllProviders";
 import { db } from "../mocks/db";
 
+const renderComponent = (product?: Product) => {
+  render(<ProductForm onSubmit={vi.fn()} product={product} />, {
+    wrapper: AllProviders,
+  });
+  return {
+    waitForFormToLoad: () => screen.findByRole("form"),
+    getNameInput: () => screen.getByPlaceholderText(/name/i),
+    getPriceInput: () => screen.getByPlaceholderText(/price/i),
+    getCategoryInput: () => screen.getByRole("combobox", { name: /category/i }),
+  };
+};
+
 describe("ProductForm", () => {
-  let category: Category;
+  let categoryMock: Category;
   beforeAll(() => {
-    category = db.category.create();
+    categoryMock = db.category.create();
   });
   afterAll(() => {
-    db.category.delete({ where: { id: { equals: category.id } } });
+    db.category.delete({ where: { id: { equals: categoryMock.id } } });
   });
   it("should render form fields", async () => {
-    render(<ProductForm onSubmit={vi.fn()} />, { wrapper: AllProviders });
+    const { getNameInput, getPriceInput, getCategoryInput, waitForFormToLoad } =
+      renderComponent();
     // await for form element to be rendered
-    await screen.findByRole("form");
-    expect(screen.getByPlaceholderText(/name/i)).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/price/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("combobox", { name: /category/i })
-    ).toBeInTheDocument();
+    await waitForFormToLoad();
+    expect(getNameInput()).toBeInTheDocument();
+    expect(getPriceInput()).toBeInTheDocument();
+    expect(getCategoryInput()).toBeInTheDocument();
   });
   it("should render product data when editing", async () => {
     const product: Product = {
       id: 1,
       name: "Product 1",
       price: 100,
-      categoryId: 1,
+      categoryId: categoryMock.id,
     };
-    render(<ProductForm onSubmit={vi.fn()} product={product} />, {
-      wrapper: AllProviders,
-    });
-    await screen.findByRole("form");
-    expect(screen.getByPlaceholderText(/name/i)).toHaveValue(product.name);
-    expect(screen.getByPlaceholderText(/price/i)).toHaveValue(
-      product.price.toString()
-    );
-    expect(
-      screen.getByRole("combobox", { name: /category/i })
-    ).toHaveTextContent(category.name);
+    const { getNameInput, getPriceInput, getCategoryInput, waitForFormToLoad } =
+      renderComponent(product);
+    await waitForFormToLoad();
+    expect(getNameInput()).toHaveValue(product.name);
+    expect(getPriceInput()).toHaveValue(product.price.toString());
+    expect(getCategoryInput()).toHaveTextContent(categoryMock.name);
   });
 });
