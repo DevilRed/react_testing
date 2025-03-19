@@ -47,4 +47,15 @@ describe("ProductForm", () => {
     expect(getPriceInput()).toHaveValue(product.price.toString());
     expect(getCategoryInput()).toHaveTextContent(categoryMock.name);
   });
+  it("should set autofocus on product name input when component is loaded", async () => {
+    const product: Product = {
+      id: 1,
+      name: "Product 1",
+      price: 100,
+      categoryId: categoryMock.id,
+    };
+    const { getNameInput, waitForFormToLoad } = renderComponent(product);
+    await waitForFormToLoad();
+    expect(getNameInput()).toHaveFocus();
+  });
 });
