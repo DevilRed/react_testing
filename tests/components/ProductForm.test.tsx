@@ -61,27 +61,42 @@ describe("ProductForm", () => {
     expect(getNameInput()).toHaveFocus();
   });
 
-  it("should display an error if name is missing", async () => {
-    const {
-      getPriceInput,
-      getCategoryInput,
-      getSubmitButton,
-      waitForFormToLoad,
-    } = renderComponent();
-    // arrange
-    await waitForFormToLoad();
+  it.each([
+    {
+      scenario: "missing",
+      errorMessage: /required/i,
+    },
+    {
+      scenario: "longer than 255 characters",
+      name: "a".repeat(256),
+      errorMessage: /255/i,
+    },
+  ])(
+    "should display an error if name is $scenario",
+    async ({ name, errorMessage }) => {
+      const {
+        getPriceInput,
+        getNameInput,
+        getCategoryInput,
+        getSubmitButton,
+        waitForFormToLoad,
+      } = renderComponent();
+      // arrange
+      await waitForFormToLoad();
 
-    // act
-    const user = userEvent.setup();
-    await user.type(getPriceInput(), "10");
-    await user.click(getCategoryInput());
-    const options = screen.getAllByRole("option");
-    await user.click(options[0]);
-    await user.click(getSubmitButton());
+      // act
+      const user = userEvent.setup();
+      await user.type(getPriceInput(), "10");
+      if (name !== undefined) await user.type(getNameInput(), name);
+      await user.click(getCategoryInput());
+      const options = screen.getAllByRole("option");
+      await user.click(options[0]);
+      await user.click(getSubmitButton());
 
-    // assert
-    const alert = await screen.findByRole("alert");
-    expect(alert).toBeInTheDocument();
-    expect(alert).toHaveTextContent(/name is required/i);
-  });
+      // assert
+      const alert = await screen.findByRole("alert");
+      expect(alert).toBeInTheDocument();
+      expect(alert).toHaveTextContent(errorMessage);
+    }
+  );
 });
