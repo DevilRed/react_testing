@@ -63,13 +63,12 @@ describe("ProductForm", () => {
     db.category.delete({ where: { id: { equals: categoryMock.id } } });
   });
   it("should render form fields", async () => {
-    const { getNameInput, getPriceInput, getCategoryInput, waitForFormToLoad } =
-      renderComponent();
+    const { waitForFormToLoad } = renderComponent();
     // await for form element to be rendered
-    await waitForFormToLoad();
-    expect(getNameInput()).toBeInTheDocument();
-    expect(getPriceInput()).toBeInTheDocument();
-    expect(getCategoryInput()).toBeInTheDocument();
+    const form = await waitForFormToLoad();
+    expect(form.nameInput()).toBeInTheDocument();
+    expect(form.priceInput()).toBeInTheDocument();
+    expect(form.categoryInput()).toBeInTheDocument();
   });
   it("should render product data when editing", async () => {
     const product: Product = {
@@ -78,12 +77,11 @@ describe("ProductForm", () => {
       price: 100,
       categoryId: categoryMock.id,
     };
-    const { getNameInput, getPriceInput, getCategoryInput, waitForFormToLoad } =
-      renderComponent(product);
-    await waitForFormToLoad();
-    expect(getNameInput()).toHaveValue(product.name);
-    expect(getPriceInput()).toHaveValue(product.price.toString());
-    expect(getCategoryInput()).toHaveTextContent(categoryMock.name);
+    const { waitForFormToLoad } = renderComponent(product);
+    const form = await waitForFormToLoad();
+    expect(form.nameInput()).toHaveValue(product.name);
+    expect(form.priceInput()).toHaveValue(product.price.toString());
+    expect(form.categoryInput()).toHaveTextContent(categoryMock.name);
   });
   it("should set autofocus on product name input when component is loaded", async () => {
     const product: Product = {
@@ -92,9 +90,9 @@ describe("ProductForm", () => {
       price: 100,
       categoryId: categoryMock.id,
     };
-    const { getNameInput, waitForFormToLoad } = renderComponent(product);
-    await waitForFormToLoad();
-    expect(getNameInput()).toHaveFocus();
+    const { waitForFormToLoad } = renderComponent(product);
+    const form = await waitForFormToLoad();
+    expect(form.nameInput()).toHaveFocus();
   });
 
   it.each([
@@ -110,24 +108,10 @@ describe("ProductForm", () => {
   ])(
     "should display an error if name is $scenario",
     async ({ name, errorMessage }) => {
-      const {
-        getPriceInput,
-        getNameInput,
-        getCategoryInput,
-        getSubmitButton,
-        waitForFormToLoad,
-      } = renderComponent();
+      const { waitForFormToLoad } = renderComponent();
       // arrange
-      await waitForFormToLoad();
-
-      // act
-      const user = userEvent.setup();
-      await user.type(getPriceInput(), "10");
-      if (name !== undefined) await user.type(getNameInput(), name);
-      await user.click(getCategoryInput());
-      const options = screen.getAllByRole("option");
-      await user.click(options[0]);
-      await user.click(getSubmitButton());
+      const form = await waitForFormToLoad();
+      form.fill({ ...form.validData, name });
 
       // assert
       const alert = await screen.findByRole("alert");
@@ -163,23 +147,10 @@ describe("ProductForm", () => {
   ])(
     "should display an error if price is $scenario",
     async ({ price, errorMessage }) => {
-      const {
-        getPriceInput,
-        getNameInput,
-        getCategoryInput,
-        getSubmitButton,
-        waitForFormToLoad,
-      } = renderComponent();
-      await waitForFormToLoad();
-
-      const user = userEvent.setup();
-      await user.type(getNameInput(), "a");
-      if (price !== undefined)
-        await user.type(getPriceInput(), price.toString());
-      await user.click(getCategoryInput());
-      const options = screen.getAllByRole("option");
-      await user.click(options[0]);
-      await user.click(getSubmitButton());
+      const { waitForFormToLoad } = renderComponent();
+      const form = await waitForFormToLoad();
+      // spread valid data and override price
+      await form.fill({ ...form.validData, price });
 
       const alert = await screen.findByRole("alert");
       expect(alert).toHaveTextContent(errorMessage);
