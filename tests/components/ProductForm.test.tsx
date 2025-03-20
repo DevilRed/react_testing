@@ -1,12 +1,22 @@
+import { vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ProductForm from "../../src/components/ProductForm";
 import { Category, Product } from "../../src/entities";
 import AllProviders from "../AllProviders";
 import { db } from "../mocks/db";
+import { Toaster } from "react-hot-toast";
+
+let categoryMock: Category;
 
 const renderComponent = (product?: Product) => {
-  render(<ProductForm onSubmit={vi.fn()} product={product} />, {
+  const onSubmit = vi.fn()
+  render(
+  <>
+    <ProductForm onSubmit={onSubmit} product={product} />
+    <Toaster />
+  </>,
+  {
     wrapper: AllProviders,
   });
   const nameInput = () => screen.getByPlaceholderText(/name/i);
@@ -25,7 +35,7 @@ const renderComponent = (product?: Product) => {
     id: 1,
     name: "a",
     price: 1,
-    categoryId: 1,
+    categoryId: categoryMock.id,
   };
   const fill = async (product: FormData) => {
     const user = userEvent.setup();
@@ -40,6 +50,7 @@ const renderComponent = (product?: Product) => {
   };
 
   return {
+    onSubmit,
     waitForFormToLoad: async () => {
       await screen.findByRole("form");
       return {
@@ -55,7 +66,7 @@ const renderComponent = (product?: Product) => {
 };
 
 describe("ProductForm", () => {
-  let categoryMock: Category;
+  // let categoryMock: Category;
   beforeAll(() => {
     categoryMock = db.category.create();
   });
@@ -156,4 +167,28 @@ describe("ProductForm", () => {
       expect(alert).toHaveTextContent(errorMessage);
     }
   );
+
+  it('should call onSubmit with valid data', async () => {
+    const {waitForFormToLoad, onSubmit} = renderComponent()
+    const form = await waitForFormToLoad()
+    await form.fill(form.validData)
+    await userEvent.click(form.submitButton())
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, ...formData} = form.validData
+    expect(onSubmit).toHaveBeenCalledWith(formData)
+  });
+
+  it('should display a toast if submissions fails', async() => {
+    const {waitForFormToLoad, onSubmit} = renderComponent()
+    // simulate a failed submission, set onSubmit to throw a rejected promise
+    onSubmit.mockRejectedValue(new Error('Submission failed'))// could be an object too {}
+
+    const form = await waitForFormToLoad()
+    await form.fill(form.validData)
+
+    const toast = await screen.findByRole('status')
+    expect(toast).toBeInTheDocument()
+    expect(toast).toHaveTextContent(/error/i)
+  });
 });
