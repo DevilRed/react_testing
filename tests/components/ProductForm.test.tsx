@@ -9,12 +9,48 @@ const renderComponent = (product?: Product) => {
   render(<ProductForm onSubmit={vi.fn()} product={product} />, {
     wrapper: AllProviders,
   });
+  const nameInput = () => screen.getByPlaceholderText(/name/i);
+  const priceInput = () => screen.getByPlaceholderText(/price/i);
+  const categoryInput = () =>
+    screen.getByRole("combobox", { name: /category/i });
+  const submitButton = () => screen.getByRole("button", { name: /submit/i });
+
+  // new type to represent form data
+  type FormData = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [K in keyof Product]: any;
+  };
+  // object to hold valid data
+  const validData: FormData = {
+    id: 1,
+    name: "a",
+    price: 1,
+    categoryId: 1,
+  };
+  const fill = async (product: FormData) => {
+    const user = userEvent.setup();
+    if (product.name !== undefined) await user.type(nameInput(), product.name);
+    if (product.price !== undefined)
+      await user.type(priceInput(), product.price.toString());
+
+    await user.click(categoryInput());
+    const options = screen.getAllByRole("option");
+    await user.click(options[0]);
+    await user.click(submitButton());
+  };
+
   return {
-    waitForFormToLoad: () => screen.findByRole("form"),
-    getNameInput: () => screen.getByPlaceholderText(/name/i),
-    getPriceInput: () => screen.getByPlaceholderText(/price/i),
-    getCategoryInput: () => screen.getByRole("combobox", { name: /category/i }),
-    getSubmitButton: () => screen.getByRole("button", { name: /submit/i }),
+    waitForFormToLoad: async () => {
+      await screen.findByRole("form");
+      return {
+        nameInput,
+        priceInput,
+        categoryInput,
+        submitButton,
+        fill,
+        validData,
+      };
+    },
   };
 };
 
