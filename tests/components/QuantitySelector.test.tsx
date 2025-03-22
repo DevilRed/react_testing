@@ -21,10 +21,9 @@ describe('QuantitySelector', () => {
 		return {
 			addToCartButton: screen.getByRole('button', {name: /add to cart/i}),
 			user: userEvent.setup(),
-			// initially when component is rendered these elements don't exist
-			getQuantity: () =>  screen.getByRole('status'),
-			getDecrementButton: () =>  screen.getByRole('button', { name: '-'}),
-			getIncrementButton: () =>  screen.getByRole('button', { name: '+'})
+			getQuantity: () =>  screen.queryByRole('status'),
+			getDecrementButton: () =>  screen.queryByRole('button', { name: '-'}),
+			getIncrementButton: () =>  screen.queryByRole('button', { name: '+'})
 		}
 	}
 	it('should render the add to cart button', () => {
@@ -32,14 +31,32 @@ describe('QuantitySelector', () => {
 		expect(addToCartButton).toBeInTheDocument()
 	});
 
-	it('should add the product to the cart',async () => {
+	it('should add product to the cart',async () => {
 		const {addToCartButton, user, getQuantity, getDecrementButton, getIncrementButton} = renderComponent()
 		await user.click(addToCartButton)
-		expect(getQuantity()).toHaveTextContent('1')
 
+		expect(getQuantity()).toHaveTextContent('1')
 		expect(getDecrementButton()).toBeInTheDocument()
 		expect(getIncrementButton()).toBeInTheDocument()
 
 		expect(addToCartButton).not.toBeInTheDocument()
+	});
+
+	it('should increment quantity', async() => {
+		const {addToCartButton, user, getQuantity, getIncrementButton} = renderComponent()
+		await user.click(addToCartButton)
+
+		await user.click(getIncrementButton()!)
+
+		expect(getQuantity()).toHaveTextContent('2')
+	});
+
+	it('should decrement quantity', async() => {
+		const {addToCartButton, user, getQuantity, getDecrementButton} = renderComponent()
+		await user.click(addToCartButton)
+
+		await user.click(getDecrementButton()!)
+
+		expect(getQuantity()).not.toBeInTheDocument()
 	});
 })
