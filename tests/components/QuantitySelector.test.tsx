@@ -20,7 +20,7 @@ describe('QuantitySelector', () => {
 
 		return {
 			addToCartButton: screen.getByRole('button', {name: /add to cart/i}),
-			getQuantityControls: () => ({// a function returning an object
+			getQuantityControls: () => ({
 				quantity:  screen.queryByRole('status'),
 				decrementButton:  screen.queryByRole('button', { name: '-'}),
 				incrementButton:  screen.queryByRole('button', { name: '+'})
@@ -59,10 +59,23 @@ describe('QuantitySelector', () => {
 	it('should decrement quantity', async() => {
 		const {addToCartButton, user, getQuantityControls} = renderComponent()
 		await user.click(addToCartButton)
+		const { quantity, incrementButton, decrementButton } = getQuantityControls()
+		await user.click(incrementButton!)
 
-		const { quantity, decrementButton } = getQuantityControls()
+		await user.click(decrementButton!)
+
+		expect(quantity).toHaveTextContent('1')
+	});
+
+	it('should remove product from the cart when quantity is 1', async() => {
+		const {addToCartButton, user, getQuantityControls} = renderComponent()
+		await user.click(addToCartButton)
+		const { quantity, incrementButton, decrementButton } = getQuantityControls()
+
 		await user.click(decrementButton!)
 
 		expect(quantity).not.toBeInTheDocument()
+		expect(incrementButton).not.toBeInTheDocument()
+		expect(decrementButton).not.toBeInTheDocument()
 	});
 })
