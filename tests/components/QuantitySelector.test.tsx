@@ -19,7 +19,7 @@ describe('QuantitySelector', () => {
 		)
 
 		return {
-			addToCartButton: screen.getByRole('button', {name: /add to cart/i}),
+			getAddToCartButton: () =>  screen.getByRole('button', {name: /add to cart/i}),
 			getQuantityControls: () => ({
 				quantity:  screen.queryByRole('status'),
 				decrementButton:  screen.queryByRole('button', { name: '-'}),
@@ -29,13 +29,13 @@ describe('QuantitySelector', () => {
 		}
 	}
 	it('should render the add to cart button', () => {
-		const {addToCartButton} = renderComponent()
-		expect(addToCartButton).toBeInTheDocument()
+		const {getAddToCartButton} = renderComponent()
+		expect(getAddToCartButton()).toBeInTheDocument()
 	});
 
 	it('should add product to the cart',async () => {
-		const {addToCartButton, user, getQuantityControls} = renderComponent()
-		await user.click(addToCartButton)
+		const {getAddToCartButton, user, getQuantityControls} = renderComponent()
+		await user.click(getAddToCartButton())
 
 		const { quantity, incrementButton, decrementButton } = getQuantityControls()
 
@@ -43,12 +43,12 @@ describe('QuantitySelector', () => {
 		expect(decrementButton).toBeInTheDocument()
 		expect(incrementButton).toBeInTheDocument()
 
-		expect(addToCartButton).not.toBeInTheDocument()
+		expect(screen.queryByRole('button', { name: /add to cart/i})).not.toBeInTheDocument()
 	});
 
 	it('should increment quantity', async() => {
-		const {addToCartButton, user, getQuantityControls} = renderComponent()
-		await user.click(addToCartButton)
+		const {getAddToCartButton, user, getQuantityControls} = renderComponent()
+		await user.click(getAddToCartButton())
 
 		const { quantity, incrementButton } = getQuantityControls()
 		await user.click(incrementButton!)
@@ -57,8 +57,8 @@ describe('QuantitySelector', () => {
 	});
 
 	it('should decrement quantity', async() => {
-		const {addToCartButton, user, getQuantityControls} = renderComponent()
-		await user.click(addToCartButton)
+		const {getAddToCartButton, user, getQuantityControls} = renderComponent()
+		await user.click(getAddToCartButton())
 		const { quantity, incrementButton, decrementButton } = getQuantityControls()
 		await user.click(incrementButton!)
 
@@ -68,8 +68,8 @@ describe('QuantitySelector', () => {
 	});
 
 	it('should remove product from the cart when quantity is 1', async() => {
-		const {addToCartButton, user, getQuantityControls} = renderComponent()
-		await user.click(addToCartButton)
+		const {getAddToCartButton, user, getQuantityControls} = renderComponent()
+		await user.click(getAddToCartButton())
 		const { quantity, incrementButton, decrementButton } = getQuantityControls()
 
 		await user.click(decrementButton!)
@@ -77,5 +77,6 @@ describe('QuantitySelector', () => {
 		expect(quantity).not.toBeInTheDocument()
 		expect(incrementButton).not.toBeInTheDocument()
 		expect(decrementButton).not.toBeInTheDocument()
+		expect(getAddToCartButton()).toBeInTheDocument()
 	});
 })
